@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'audio/background_music_service.dart';
 import 'screens/settings_screen.dart';
 import 'widgets/floating_widget.dart';
+import 'widgets/settings_button.dart';
 
 void main() {
   runApp(const SecondLifeApp());
@@ -19,8 +21,22 @@ class SecondLifeApp extends StatelessWidget {
   }
 }
 
-class BlackScreen extends StatelessWidget {
+class BlackScreen extends StatefulWidget {
   const BlackScreen({super.key});
+
+  @override
+  State<BlackScreen> createState() => _BlackScreenState();
+}
+
+class _BlackScreenState extends State<BlackScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Запускаем фоновую музыку главного экрана.
+    // Файл должен лежать в assets/audio/main_theme.mp3
+    // (см. инструкцию по подключению ниже).
+    BackgroundMusicService.instance.playLoop('audio/main_theme.mp3');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,13 +78,9 @@ class BlackScreen extends StatelessWidget {
             child: Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.only(right: 8, top: 4),
-                child: IconButton(
-                  icon: const Icon(Icons.settings_rounded),
-                  color: Colors.white,
-                  iconSize: 30,
-                  tooltip: 'Настройки',
-                  onPressed: () {
+                padding: const EdgeInsets.only(right: 12, top: 8),
+                child: SettingsButton(
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => const SettingsScreen(),
