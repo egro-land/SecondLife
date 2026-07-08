@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/settings_screen.dart';
+import 'widgets/floating_widget.dart';
 
 void main() {
   runApp(const SecondLifeApp());
@@ -43,21 +44,25 @@ class BlackScreen extends StatelessWidget {
             ),
           ),
 
-          // Персонаж
+          // Персонаж — естественно парит, как Паймон в Genshin
           Align(
             alignment: const Alignment(-1, 0.1),
-            child: Image.asset(
-              'assets/images/character2.png',
-              height: 250,
+            child: FloatingWidget(
+              amplitude: 12,
+              duration: const Duration(seconds: 3),
+              child: Image.asset(
+                'assets/images/character2.png',
+                height: 250,
+              ),
             ),
           ),
 
-          // Кнопка настроек — сверху слева
+          // Кнопка настроек — сверху справа
           SafeArea(
             child: Align(
-              alignment: Alignment.topLeft,
+              alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.only(left: 8, top: 4),
+                padding: const EdgeInsets.only(right: 8, top: 4),
                 child: IconButton(
                   icon: const Icon(Icons.settings_rounded),
                   color: Colors.white,
