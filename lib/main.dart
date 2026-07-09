@@ -110,7 +110,6 @@ class _BlackScreenState extends State<BlackScreen> with RouteAware {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _buildMainScreenContent(),
-      
     );
   }
 
@@ -120,10 +119,14 @@ class _BlackScreenState extends State<BlackScreen> with RouteAware {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final bookWidth = screenWidth * 2.25;
+        // Книжка и персонаж теперь лежат в общем полноэкранном Stack
+        // (а не внутри Expanded), поэтому их размер больше ничем не
+        // обрезается — можно смело крутить множители ниже.
+        final bookWidth = screenWidth * 0.5;
         final characterHeight = screenWidth * 0.85;
 
         return Stack(
+          clipBehavior: Clip.none,
           children: [
             SizedBox.expand(
               child: Image.asset(
@@ -132,47 +135,40 @@ class _BlackScreenState extends State<BlackScreen> with RouteAware {
               ),
             ),
 
+            // Книжка — вынесена из Expanded, размер задаётся напрямую
+            Align(
+              alignment: const Alignment(0.5, 0.05),
+              child: GestureDetector(
+                onTap: _onBookTap,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: bookWidth,
+                ),
+              ),
+            ),
+
+            // Персонаж — вынесен из Expanded, размер задаётся напрямую.
+            // Стоит после книжки в списке детей Stack, поэтому рисуется
+            // поверх неё.
+            Align(
+              alignment: const Alignment(-1, 0.13),
+              child: FloatingWidget(
+                amplitude: 12,
+                duration: const Duration(seconds: 3),
+                child: Image.asset(
+                  'assets/images/character2.png',
+                  height: characterHeight,
+                ),
+              ),
+            ),
+
             SafeArea(
               child: Column(
                 children: [
                   const SizedBox(height: 78),
-
                   const _TitleWithDividers(
                     text: 'Давай проживём\nещё одну жизнь',
                   ),
-
-                  const SizedBox(height: 12),
-
-                  Expanded(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: const Alignment(0.1, 0),
-                          child: GestureDetector(
-                            onTap: _onBookTap,
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              width: bookWidth,
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: const Alignment(-1, 0.08),
-                          child: FloatingWidget(
-                            amplitude: 12,
-                            duration: const Duration(seconds: 3),
-                            child: Image.asset(
-                              'assets/images/character2.png',
-                              height: characterHeight,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
                 ],
               ),
             ),
