@@ -65,6 +65,7 @@ flutter:
     - assets/images/character2.png
     - assets/audio/main_theme.mp3
     - assets/video/book_open.mp4
+    - assets/images/lumi_frames/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

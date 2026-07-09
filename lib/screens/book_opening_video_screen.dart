@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../audio/background_music_service.dart';
-import 'story_intro_screen.dart';
+import 'awakening_scene_screen.dart';
 
 /// Полноэкранное видео открытия книги (перелистывание страниц).
 /// Принимает уже созданный и проинициализированный [controller] —
@@ -69,13 +69,16 @@ class _BookOpeningVideoScreenState extends State<BookOpeningVideoScreen> {
     }
   }
 
-  void _goToPrologue() {
-    if (_navigated) return;
-    _navigated = true;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const StoryIntroScreen()),
-    );
-  }
+ void _goToPrologue() {
+  if (_navigated) return;
+  _navigated = true;
+
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(
+      builder: (_) => const AwakeningSceneScreen(),
+    ),
+  );
+}
 
   @override
   void dispose() {
