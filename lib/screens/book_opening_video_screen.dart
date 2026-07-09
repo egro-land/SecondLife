@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../audio/background_music_service.dart';
+import '../main.dart';
 import 'awakening_scene_screen.dart';
+import 'memory_book_registration_screen.dart';
 
 /// Полноэкранное видео открытия книги (перелистывание страниц).
 /// Принимает уже созданный и проинициализированный [controller] —
@@ -69,16 +71,52 @@ class _BookOpeningVideoScreenState extends State<BookOpeningVideoScreen> {
     }
   }
 
- void _goToPrologue() {
-  if (_navigated) return;
-  _navigated = true;
+  void _goToPrologue() {
+    if (_navigated) return;
+    _navigated = true;
 
-  Navigator.of(context).pushReplacement(
-    MaterialPageRoute(
-      builder: (_) => const AwakeningSceneScreen(),
-    ),
-  );
-}
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        // ВАЖНО: используем ctx из builder-а НОВОГО экрана, а не context
+        // текущего (умирающего) состояния. pushReplacement уничтожает
+        // BookOpeningVideoScreenState сразу же, поэтому если передать
+        // сюда просто "_goToRegistration" (метод, использующий this.context),
+        // то к моменту, когда игрок дотапает пролог до конца и вызовется
+        // onFinished, этот context уже будет unmounted — и приложение
+        // упадёт с ошибкой "This widget has been unmounted".
+        //
+        // ctx здесь принадлежит AwakeningSceneScreen — экрану, который
+        // в этот момент жив, поэтому именно его и нужно передавать дальше.
+        builder: (ctx) => AwakeningSceneScreen(
+          onFinished: () => _goToRegistration(ctx),
+        ),
+      ),
+    );
+  }
+
+  /// Срабатывает по концовке пролога — тап на "Наше путешествие
+  /// начинается" — и открывает регистрацию персонажа в Книге
+  /// воспоминаний.
+  ///
+  /// Принимает [ctx] — живой context экрана AwakeningSceneScreen на
+  /// момент вызова (а не context этого, уже уничтоженного к тому
+  /// моменту, состояния).
+  void _goToRegistration(BuildContext ctx) {
+    Navigator.of(ctx).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => MemoryBookRegistrationScreen(
+          onComplete: (data) {
+            // TODO: сохранить data.name / data.language / data.reasons /
+            // data.interests / data.level (SharedPreferences, бэкенд,
+            // состояние приложения — на ваш выбор)
+            Navigator.of(ctx).pushReplacement(
+              MaterialPageRoute(builder: (_) => const BlackScreen()),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
