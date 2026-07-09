@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../audio/background_music_service.dart';
 import 'story_intro_screen.dart';
 
 /// Полноэкранное видео открытия книги (перелистывание страниц).
-/// Принимает уже созданный (и, в идеале, уже проинициализированный)
-/// [controller] — его нужно начать готовить заранее, ещё на главном
-/// экране, чтобы тут не было ни секунды чёрного фона при переходе.
+/// Принимает уже созданный и проинициализированный [controller] —
+/// его готовят заранее на главном экране, чтобы тут не было чёрного
+/// экрана, пока видео буферизуется.
+///
+/// Пока это видео (и следующий за ним пролог) на экране — фоновая
+/// музыка главного меню поставлена на паузу.
 ///
 /// Как только видео доигрывает до конца — автоматически переходит
 /// на StoryIntroScreen. Можно тапнуть "Пропустить" в углу.
@@ -18,9 +22,8 @@ class BookOpeningVideoScreen extends StatefulWidget {
 
   final VideoPlayerController controller;
 
-  /// Что показать, пока видео ещё не готово (доля секунды, если не
-  /// успело подгрузиться заранее). Обычно сюда передают точную копию
-  /// главного экрана, чтобы переход был совсем незаметным.
+  /// Что показать, пока видео ещё не готово. Обычно сюда передают
+  /// точную копию главного экрана, чтобы переход был совсем незаметным.
   final Widget? fallback;
 
   @override
@@ -34,11 +37,18 @@ class _BookOpeningVideoScreenState extends State<BookOpeningVideoScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Музыке главного меню тут не место — на видео и дальше в прологе
+    // должно быть тихо (или своя атмосферная озвучка, если появится).
+    BackgroundMusicService.instance.pause();
+
     final controller = widget.controller;
 
     if (controller.value.isInitialized) {
       controller.play();
     } else {
+      // Подстраховка на случай, если контроллер почему-то не был
+      // проинициализирован заранее (не должно происходить в норме)
       controller.initialize().then((_) {
         if (mounted) setState(() {});
         controller.play();
@@ -83,8 +93,6 @@ class _BookOpeningVideoScreenState extends State<BookOpeningVideoScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Пока видео не готово — показываем главный экран как заглушку,
-          // чтобы переход не "мигал" чёрным
           if (!isReady && widget.fallback != null) widget.fallback!,
 
           if (isReady)
@@ -97,7 +105,6 @@ class _BookOpeningVideoScreenState extends State<BookOpeningVideoScreen> {
               ),
             ),
 
-          // Кнопка пропуска
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,

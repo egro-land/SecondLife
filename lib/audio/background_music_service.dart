@@ -10,6 +10,7 @@ import '../settings/app_settings.dart';
 class BackgroundMusicService {
   BackgroundMusicService._internal() {
     AppSettings.instance.musicVolume.addListener(_onVolumeChanged);
+    _configureAudioContext();
   }
 
   static final BackgroundMusicService instance =
@@ -17,6 +18,28 @@ class BackgroundMusicService {
 
   final AudioPlayer _player = AudioPlayer();
   String? _currentAsset;
+
+  /// Говорим системе, что этот плеер не должен "бороться" за аудио-фокус
+  /// с видео (или любым другим звуком в приложении) — тогда музыка
+  /// не будет обрываться системой сама по себе. Останавливаем/запускаем
+  /// её мы теперь сами явно (pause/resume), под конкретные экраны.
+  Future<void> _configureAudioContext() async {
+    await _player.setAudioContext(
+      AudioContext(
+        android: AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.none,
+        ),
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.ambient,
+          options: {AVAudioSessionOptions.mixWithOthers},
+        ),
+      ),
+    );
+  }
 
   /// Запускает музыку по кругу. Если этот же трек уже играет — ничего
   /// не делает (не перезапускает), чтобы не было щелчка при пересборке
@@ -30,14 +53,26 @@ class BackgroundMusicService {
     await _player.play(AssetSource(assetPath));
   }
 
+  /// Ставит музыку на паузу (для экранов, где её быть не должно —
+  /// видео открытия книги, пролог и т.д.)
+  Future<void> pause() => _player.pause();
+
+  /// Возобновляет с того же места, где остановилась (для главного меню)
+  Future<void> resume() => _player.resume();
+
+  /// Подстраховка на случай, если resume() почему-то не сработал —
+  /// проверяет реальное состояние плеера и досылает play при необходимости.
+  Future<void> ensurePlaying() async {
+    if (_currentAsset == null) return;
+    if (_player.state != PlayerState.playing) {
+      await _player.resume();
+    }
+  }
+
   Future<void> stop() async {
     await _player.stop();
     _currentAsset = null;
   }
-
-  Future<void> pause() => _player.pause();
-
-  Future<void> resume() => _player.resume();
 
   void _onVolumeChanged() {
     _player.setVolume(AppSettings.instance.musicVolume.value);
