@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: secondlife
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/secondlife
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
+    ports:
+      - "8000:8000"
+    volumes:
+      # Позволяет менять код в ./app и видеть изменения без пересборки
+      # образа (uvicorn запущен с --reload).
+      - ./app:/app/app
+
+volumes:
+  db_data:
